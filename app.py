@@ -7,9 +7,14 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
-# Configure Gemini API
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Safely get the API key from Render's environment variables
+api_key = os.environ.get("GEMINI_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    print("WARNING: GEMINI_API_KEY environment variable is missing!")
+    model = None
 
 def scrape_technical_data(url):
     data = {
@@ -21,7 +26,10 @@ def scrape_technical_data(url):
             url = "https://" + url
             
         start_time = time.time()
-        response = requests.get(url, timeout=10)
+        # Added a User-Agent to help bypass basic website security blocks
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        response = requests.get(url, headers=headers, timeout=10)
+        
         data["load_time"] = f"{round(time.time() - start_time, 2)} seconds"
         data["ssl"] = "Yes" if response.url.startswith("https") else "No"
         
@@ -61,6 +69,9 @@ def analyze():
 
     tech_data = scrape_technical_data(url)
     
+    if not model:
+        return jsonify({"error": "Gemini API key is missing on the server. Please check Render settings."}), 500
+    
     prompt = f"""
     Analyze this website text scraped from {url}: {tech_data['raw_text']}
     Return ONLY a raw JSON object (no markdown formatting, no ```json tags) with these exact keys:
@@ -78,6 +89,7 @@ def analyze():
         clean_json = gemini_response.text.replace('```json', '').replace('```', '').strip()
         biz_data = json.loads(clean_json)
     except Exception as e:
+        print(f"Gemini API Error: {e}")
         biz_data = {"error": "Failed to extract business data."}
 
     final_output = {**tech_data, **biz_data}
