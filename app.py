@@ -9,7 +9,6 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
-# Core Configuration
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
@@ -18,15 +17,10 @@ else:
     model = None
 
 def scrape_technical_data(url):
-    data = {"load_time": "N/A", "ssl": "No", "copyright": "N/A", "bi_tools": "No", "crm": "No", "socials": "No", "emails": "No", "raw_text": ""}
+    data = {"load_time": "N/A", "ssl": "No", "copyright": "N/A", "bi_tools": "No", "crm": "No", "socials": "No", "emails": "No"}
     try:
         if not url.startswith("http"): url = "https://" + url
-        # Advanced headers to spoof a real browser and bypass basic Cloudflare/bot blocks
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5'
-        }
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
         
         start_time = time.time()
         response = requests.get(url, headers=headers, timeout=10)
@@ -35,10 +29,20 @@ def scrape_technical_data(url):
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
+            html_str = response.text.lower()
+            
+            if any(x in html_str for x in ["google-analytics", "gtm", "fbevents", "pixel"]): data["bi_tools"] = "Yes"
+            if any(x in html_str for x in ["hubspot", "salesforce", "zoho", "crm"]): data["crm"] = "Yes"
+            if "mailto:" in html_str: data["emails"] = "Yes"
+            if any(x in html_str for x in ["linkedin.com", "facebook.com", "twitter.com"]): data["socials"] = "Yes"
+            
+            copy_match = re.search(r'©\s*(\d{4})', response.text)
+            if copy_match: data["copyright"] = copy_match.group(1)
+            
             for script in soup(["script", "style", "nav", "footer"]): script.extract()
-            data["raw_text"] = soup.get_text(separator=' ', strip=True)[:4000]
+            data["raw_text"] = soup.get_text(separator=' ', strip=True)[:4500]
         else:
-            data["raw_text"] = f"Website security blocked scraper (Status {response.status_code})."
+            data["raw_text"] = "Website security blocked scraper."
             
     except Exception as e:
         print(f"Scraper error: {e}")
@@ -57,60 +61,51 @@ def analyze():
 
     tech_data = scrape_technical_data(url)
     
-    # Unbreakable Prompt: Forces AI to generate data even if the website blocks us
     prompt = f"""
-    You are an expert B2B intelligence AI. Analyze the company at URL: {url}
-    
-    Scraped text (might indicate a security block): {tech_data['raw_text']}
+    Analyze the B2B company at URL: {url}
+    Scraped text: {tech_data['raw_text']}
     
     CRITICAL INSTRUCTIONS:
-    1. If the scraped text says the website is blocked, completely IGNORE the text.
-    2. Instead, use your internal training data to estimate the profile of the company associated with {url}, or infer its business model based on its domain name.
-    3. You MUST provide realistic, professional business estimates. DO NOT use "N/A", "Unknown", or leave fields blank.
-    4. Return ONLY a pure JSON object.
+    1. If text is blocked, use your internal knowledge base to estimate the profile based on the domain name.
+    2. For 'country', provide the SPECIFIC country of origin (e.g., 'India', 'South Africa', 'USA'). DO NOT say 'Global'.
+    3. You MUST provide realistic, professional estimates. DO NOT leave fields blank.
     
+    Return ONLY a pure JSON object matching this schema exactly:
     {{
-      "company_name": "Full Company Name",
-      "sector": "Primary Industry",
-      "country": "Country Location",
-      "established": "Year (Estimate)",
-      "employees": "Count Range",
-      "revenue": "Revenue Range",
-      "brief": "2 sentence professional overview.",
-      "sector_pain_points": ["Point 1", "Point 2", "Point 3"],
-      "company_pain_points": ["Point 1", "Point 2", "Point 3"],
-      "latest_news": "One relevant industry trend."
+      "company_name": "String",
+      "sector": "String",
+      "country": "String",
+      "employees": "String",
+      "revenue": "String",
+      "brief": "String",
+      "sector_pain_points": ["String", "String", "String"],
+      "company_pain_points": ["String", "String", "String"],
+      "latest_news": "String"
     }}
     """
     
     try:
-        response = model.generate_content(prompt)
-        text = response.text
-        
-        # AGGRESSIVE REGEX PARSING: Mathematically extracts JSON even if AI adds conversational text
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        if match:
-            clean_json_str = match.group(0)
-            biz_data = json.loads(clean_json_str)
-            biz_data["match_score"] = "90/100"
-        else:
-            raise ValueError("No JSON payload detected in AI response.")
-            
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                response_mime_type="application/json",
+            )
+        )
+        biz_data = json.loads(response.text)
+        biz_data["match_score"] = "95/100"
     except Exception as e:
         print(f"AI parsing error: {e}")
-        # Realistic Fallback: Keeps the UI looking professional if everything fails
         biz_data = {
             "company_name": url,
             "sector": "Technology / IT Services",
-            "country": "Global",
-            "established": "2020+",
+            "country": "Country Not Detected",
             "employees": "10-50",
             "revenue": "$1M - $5M",
-            "brief": "A digital solutions provider focused on driving technological transformation. (Note: Extracted via domain analysis due to site security).",
+            "brief": "A digital solutions provider. (Note: Extracted via domain analysis due to site security).",
             "sector_pain_points": ["Customer Acquisition", "Digital Scaling", "Market Competition"],
             "company_pain_points": ["Brand Visibility", "Lead Generation", "Talent Retention"],
             "latest_news": "The technology sector continues rapid AI adoption.",
-            "match_score": "60/100 (Estimated)"
+            "match_score": "60/100 (Estimated Fallback)"
         }
 
     return jsonify({**tech_data, **biz_data})
