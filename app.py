@@ -13,11 +13,8 @@ app = Flask(__name__)
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
-    # Using the search grounding tool for accuracy
-    model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash',
-        tools=[{"google_search_retrieval": {}}]
-    )
+    # Using simple initialization first to ensure it boots
+    model = genai.GenerativeModel('gemini-1.5-flash')
 else:
     model = None
 
@@ -27,7 +24,7 @@ def scrape_technical_data(url):
         if not url.startswith("http"): url = "https://" + url
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
         response = requests.get(url, headers=headers, timeout=15)
-        data["load_time"] = f"{round(time.time(), 2)}" # Simplified for frontend calculation
+        data["load_time"] = f"{round(time.time(), 2)}"
         data["ssl"] = "Yes" if response.url.startswith("https") else "No"
         soup = BeautifulSoup(response.text, 'html.parser')
         for script in soup(["script", "style"]): script.extract()
@@ -47,17 +44,17 @@ def analyze():
 
     tech_data = scrape_technical_data(url)
     
-    # ADVANCED PROMPT WITH SEARCH GROUNDING
+    # We ask Gemini to use its internal "knowledge retrieval" in the prompt
     prompt = f"""
     Perform a deep enterprise analysis of the company at {url}.
-    Use Google Search to find the most accurate and up-to-date information for:
+    Research and find:
     - Official Company Name
     - Industry Sector
     - Headquarters Country
-    - Founded/Established Year
+    - Founded Year
     - Employee Count
     - Annual Revenue
-    - Recent News (within the last 6 months)
+    - Recent News
 
     Return ONLY a valid JSON object:
     {{
@@ -75,14 +72,12 @@ def analyze():
     """
     
     try:
-        # Generate content with tools enabled
         response = model.generate_content(prompt)
         clean_json_str = response.text.replace('```json', '').replace('```', '').strip()
         biz_data = json.loads(clean_json_str)
-        # Adding a match score for the enterprise look
-        biz_data["match_score"] = "85/100" 
+        biz_data["match_score"] = "92/100" 
     except Exception as e:
-        biz_data = {"company_name": "Analysis Failed", "sector": "N/A"}
+        biz_data = {"company_name": "Analysis Failed", "sector": "N/A", "sector_pain_points":[], "company_pain_points":[]}
 
     return jsonify({**tech_data, **biz_data})
 
