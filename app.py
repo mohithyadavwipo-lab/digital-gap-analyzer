@@ -13,7 +13,7 @@ app = Flask(__name__)
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
-    # Using simple initialization first to ensure it boots
+    # CRITICAL FIX: Removed the tools parameter to prevent the server crash.
     model = genai.GenerativeModel('gemini-1.5-flash')
 else:
     model = None
@@ -44,10 +44,10 @@ def analyze():
 
     tech_data = scrape_technical_data(url)
     
-    # We ask Gemini to use its internal "knowledge retrieval" in the prompt
+    # We command the AI to act as the researcher within the prompt itself
     prompt = f"""
     Perform a deep enterprise analysis of the company at {url}.
-    Research and find:
+    Use your internal knowledge base to estimate and find:
     - Official Company Name
     - Industry Sector
     - Headquarters Country
@@ -56,7 +56,7 @@ def analyze():
     - Annual Revenue
     - Recent News
 
-    Return ONLY a valid JSON object:
+    Return ONLY a valid JSON object. DO NOT RETURN "N/A".
     {{
       "company_name": "Name",
       "sector": "Sector",
@@ -77,7 +77,8 @@ def analyze():
         biz_data = json.loads(clean_json_str)
         biz_data["match_score"] = "92/100" 
     except Exception as e:
-        biz_data = {"company_name": "Analysis Failed", "sector": "N/A", "sector_pain_points":[], "company_pain_points":[]}
+        print(f"AI parsing error: {e}")
+        biz_data = {"company_name": "Analysis Parsing Failed", "sector": "Please try URL again", "sector_pain_points":[], "company_pain_points":[]}
 
     return jsonify({**tech_data, **biz_data})
 
