@@ -1,13 +1,15 @@
 import os
 import time
 import requests
+import json
+import re
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, jsonify
 import google.generativeai as genai
 
 app = Flask(__name__)
 
-# Config
+# Core Configuration
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
@@ -16,7 +18,7 @@ else:
     model = None
 
 def scrape_technical_data(url):
-    data = {"load_time": "N/A", "ssl": "No", "copyright": "N/A", "bi_tools": "No", "crm": "No", "socials": "No", "emails": "No", "raw_text": ""}
+    data = {"load_time": "N/A", "ssl": "No", "copyright": "N/A", "bi_tools": "No", "crm": "No", "socials": "No", "emails": "No", "raw_text": "No text found"}
     try:
         if not url.startswith("http"): url = "https://" + url
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
@@ -27,21 +29,21 @@ def scrape_technical_data(url):
         data["ssl"] = "Yes" if response.url.startswith("https") else "No"
         
         soup = BeautifulSoup(response.text, 'html.parser')
-        # Grab more text for better context
-        data["raw_text"] = soup.get_text(separator=' ', strip=True)[:6000]
+        # Filter out scripts and styles to get clean text for the AI
+        for script in soup(["script", "style"]): script.extract()
+        data["raw_text"] = soup.get_text(separator=' ', strip=True)[:7000]
         
         html_str = response.text.lower()
-        if any(x in html_str for x in ["google-analytics", "gtm", "fbevents"]): data["bi_tools"] = "Yes"
-        if any(x in html_str for x in ["hubspot", "salesforce", "zoho"]): data["crm"] = "Yes"
+        if any(x in html_str for x in ["google-analytics", "gtm", "fbevents", "pixel"]): data["bi_tools"] = "Yes"
+        if any(x in html_str for x in ["hubspot", "salesforce", "zoho", "crm"]): data["crm"] = "Yes"
         if "mailto:" in html_str: data["emails"] = "Yes"
         if any(x in html_str for x in ["linkedin.com", "facebook.com", "twitter.com"]): data["socials"] = "Yes"
         
-        import re
-        match = re.search(r'©\s*(\d{4})', response.text)
-        if match: data["copyright"] = match.group(1)
+        copy_match = re.search(r'©\s*(\d{4})', response.text)
+        if copy_match: data["copyright"] = copy_match.group(1)
             
     except Exception as e:
-        print(f"Scraper Error: {e}")
+        print(f"Scraper error: {e}")
     return data
 
 @app.route('/')
@@ -51,33 +53,53 @@ def index():
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
     url = request.json.get('url')
-    if not url or not model: return jsonify({"error": "Config missing"}), 400
+    if not url or not model:
+        return jsonify({"error": "Configuration Error"}), 400
 
     tech_data = scrape_technical_data(url)
     
-    # NEW AGGRESSIVE PROMPT
+    # FORCED INFERENCE PROMPT: This prevents the "N/A" results
     prompt = f"""
-    You are a Senior B2B Sales Strategist. Analyze the company at {url}.
+    Acting as a Senior Market Research Analyst, analyze the company: {url}
     
-    WEBSITE TEXT: {tech_data['raw_text']}
+    Context from website: {tech_data['raw_text']}
     
     INSTRUCTIONS:
-    1. Use the provided text AND your vast internal knowledge about this company or similar companies in its sector.
-    2. DO NOT USE "N/A" or "Data not found". Provide professional estimates based on industry standards if exact data is missing.
-    3. Return ONLY a valid JSON object with these keys: 
-       "company_name", "sector", "country", "established_year", "employees", "revenue", 
-       "brief" (2 sentences), "sector_pain_points" (3 items), "company_pain_points" (3 items), "latest_news".
+    1. Fill every field below. 
+    2. If exact data (revenue/employees) is not in the text, use your internal knowledge of {url} or its sector to provide a professional estimate.
+    3. DO NOT return "N/A", "Unknown", or "Data not found".
+    4. Return ONLY a valid JSON object.
+    
+    JSON Template:
+    {{
+      "company_name": "Full Name",
+      "sector": "Primary Industry",
+      "country": "Headquarters Country",
+      "established_year": "Year",
+      "employees": "Count or Range",
+      "revenue": "Estimate in USD",
+      "brief": "2-sentence value proposition.",
+      "sector_pain_points": ["Point 1", "Point 2", "Point 3"],
+      "company_pain_points": ["Digital gap", "Operational gap", "Tech weakness"],
+      "latest_news": "1 sentence on a recent trend or news."
+    }}
     """
     
     try:
         response = model.generate_content(prompt)
-        import json
-        # Robust JSON cleaning
-        clean_json = response.text.strip().replace('```json', '').replace('```', '')
-        biz_data = json.loads(clean_json)
+        # Clean potential markdown from AI response
+        clean_json_str = response.text.replace('```json', '').replace('```', '').strip()
+        biz_data = json.loads(clean_json_str)
     except Exception as e:
         print(f"AI Error: {e}")
-        biz_data = {"company_name": url, "sector": "Analysis failed", "brief": "Please try running this URL again."}
+        biz_data = {
+            "company_name": url, "sector": "Analysis Pivot Required", "country": "Global",
+            "established_year": "Various", "employees": "Review manually", "revenue": "Market dependent",
+            "brief": "The tool encountered a processing error. Check website manually.",
+            "sector_pain_points": ["Digital adoption lag", "Data silos", "Security risks"],
+            "company_pain_points": ["Legacy systems", "Unoptimized UX", "Missing BI tools"],
+            "latest_news": "Sector is undergoing rapid digital transformation."
+        }
 
     return jsonify({**tech_data, **biz_data})
 
