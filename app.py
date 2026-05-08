@@ -9,6 +9,7 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
+# Core Configuration
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
@@ -40,13 +41,14 @@ def scrape_technical_data(url):
             if copy_match: data["copyright"] = copy_match.group(1)
             
             for script in soup(["script", "style", "nav", "footer"]): script.extract()
-            data["raw_text"] = soup.get_text(separator=' ', strip=True)[:4000]
+            # Keep text chunk reasonable to avoid token limits
+            data["raw_text"] = soup.get_text(separator=' ', strip=True)[:3500]
         else:
-            data["raw_text"] = "Website blocked scraper."
+            data["raw_text"] = f"Website blocked scraper (Status {response.status_code})."
             
     except Exception as e:
         print(f"Scraper error: {e}")
-        data["raw_text"] = "Website blocked scraper."
+        data["raw_text"] = "Website blocked scraper or timed out."
         
     return data
 
@@ -63,14 +65,14 @@ def analyze():
     
     prompt = f"""
     You are a Senior B2B Intelligence Analyst. Analyze the company at {url}.
-    Scraped text (might be blocked): {tech_data['raw_text']}
+    Scraped text: {tech_data['raw_text']}
     
     INSTRUCTIONS:
-    1. If the scraped text is short or blocked, you MUST use your internal training data to identify the company at {url}.
-    2. Identify the SPECIFIC country of origin (e.g., 'South Africa', 'India'). Do NOT use generic terms like 'Global'.
-    3. Fill ALL fields with professional estimates based on industry standards. Do NOT output "N/A" or "Unknown".
+    1. If the scraped text is short or blocked, use your internal training data to identify {url}.
+    2. Identify the SPECIFIC country of origin (e.g., 'South Africa', 'India', 'USA'). Do NOT use 'Global'.
+    3. Fill ALL fields with professional estimates. Do NOT leave fields blank.
     
-    Return exactly and ONLY a JSON object:
+    Output exactly and ONLY a JSON object:
     {{
       "company_name": "Name",
       "sector": "Sector",
@@ -85,29 +87,34 @@ def analyze():
     """
     
     try:
-        # Standard generation allows the AI to output without crashing the API
         response = model.generate_content(prompt)
+        raw_text = response.text.strip()
         
-        # Regex physically rips out the JSON block even if conversational text is present
-        match = re.search(r'\{.*\}', response.text, re.DOTALL)
-        if not match:
-            raise ValueError("AI did not output JSON formatting.")
+        # THE PROPER FIX: Unbreakable JSON Extractor
+        # This finds the absolute boundaries of the JSON object, ignoring any markdown or chat
+        start_idx = raw_text.find('{')
+        end_idx = raw_text.rfind('}')
+        
+        if start_idx != -1 and end_idx != -1:
+            clean_json_str = raw_text[start_idx:end_idx+1]
+            biz_data = json.loads(clean_json_str)
+            biz_data["match_score"] = "98/100"
+        else:
+            raise ValueError("No valid JSON structure found in AI response.")
             
-        biz_data = json.loads(match.group(0))
-        biz_data["match_score"] = "98/100"
-        
     except Exception as e:
-        print(f"AI parsing error: {e}")
+        print(f"FATAL AI ERROR: {e}")
+        # The fallback now prints the exact error so you can see what went wrong in the UI
         biz_data = {
             "company_name": url,
-            "sector": "Pending Analysis",
-            "country": "Pending",
-            "employees": "Pending",
-            "revenue": "Pending",
-            "brief": "AI generation encountered a timeout. Please click Analyze Queue again to retry.",
-            "sector_pain_points": ["-", "-", "-"],
-            "company_pain_points": ["-", "-", "-"],
-            "latest_news": "-",
+            "sector": "Error Parsing Data",
+            "country": "Error",
+            "employees": "Error",
+            "revenue": "Error",
+            "brief": f"System Error: {str(e)}",
+            "sector_pain_points": ["Error", "Error", "Error"],
+            "company_pain_points": ["Error", "Error", "Error"],
+            "latest_news": "Error",
             "match_score": "Error"
         }
 
