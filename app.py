@@ -13,7 +13,8 @@ app = Flask(__name__)
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # FIX: Using 'gemini-pro' which is universally compatible with the older SDK
+    model = genai.GenerativeModel('gemini-pro')
 else:
     model = None
 
@@ -41,7 +42,6 @@ def scrape_technical_data(url):
             if copy_match: data["copyright"] = copy_match.group(1)
             
             for script in soup(["script", "style", "nav", "footer"]): script.extract()
-            # Keep text chunk reasonable to avoid token limits
             data["raw_text"] = soup.get_text(separator=' ', strip=True)[:3500]
         else:
             data["raw_text"] = f"Website blocked scraper (Status {response.status_code})."
@@ -90,8 +90,6 @@ def analyze():
         response = model.generate_content(prompt)
         raw_text = response.text.strip()
         
-        # THE PROPER FIX: Unbreakable JSON Extractor
-        # This finds the absolute boundaries of the JSON object, ignoring any markdown or chat
         start_idx = raw_text.find('{')
         end_idx = raw_text.rfind('}')
         
@@ -104,7 +102,6 @@ def analyze():
             
     except Exception as e:
         print(f"FATAL AI ERROR: {e}")
-        # The fallback now prints the exact error so you can see what went wrong in the UI
         biz_data = {
             "company_name": url,
             "sector": "Error Parsing Data",
