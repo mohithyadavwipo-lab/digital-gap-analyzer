@@ -5,18 +5,11 @@ import json
 import re
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, jsonify
-import google.generativeai as genai
 
 app = Flask(__name__)
 
 # Core Configuration
 api_key = os.environ.get("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
-    # FIX: Using 'gemini-pro' which is universally compatible with the older SDK
-    model = genai.GenerativeModel('gemini-pro')
-else:
-    model = None
 
 def scrape_technical_data(url):
     data = {"load_time": "N/A", "ssl": "No", "copyright": "N/A", "bi_tools": "No", "crm": "No", "socials": "No", "emails": "No", "raw_text": ""}
@@ -59,7 +52,7 @@ def index():
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
     url = request.json.get('url')
-    if not url or not model: return jsonify({"error": "Config missing"}), 400
+    if not url or not api_key: return jsonify({"error": "Config missing"}), 400
 
     tech_data = scrape_technical_data(url)
     
@@ -86,10 +79,26 @@ def analyze():
     }}
     """
     
+    # THE PROPER FIX: Direct REST API Call bypassing the Python SDK entirely
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"responseMimeType": "application/json"}
+    }
+    
     try:
-        response = model.generate_content(prompt)
-        raw_text = response.text.strip()
+        res = requests.post(api_url, headers=headers, json=payload)
+        res_data = res.json()
         
+        # Catch direct API server errors
+        if 'error' in res_data:
+            raise ValueError(res_data['error']['message'])
+            
+        # Parse the raw text out of the standard Google JSON structure
+        raw_text = res_data['candidates'][0]['content']['parts'][0]['text'].strip()
+        
+        # Unbreakable JSON clip
         start_idx = raw_text.find('{')
         end_idx = raw_text.rfind('}')
         
@@ -101,14 +110,14 @@ def analyze():
             raise ValueError("No valid JSON structure found in AI response.")
             
     except Exception as e:
-        print(f"FATAL AI ERROR: {e}")
+        print(f"FATAL API ERROR: {e}")
         biz_data = {
             "company_name": url,
             "sector": "Error Parsing Data",
             "country": "Error",
             "employees": "Error",
             "revenue": "Error",
-            "brief": f"System Error: {str(e)}",
+            "brief": f"Direct API Error: {str(e)}",
             "sector_pain_points": ["Error", "Error", "Error"],
             "company_pain_points": ["Error", "Error", "Error"],
             "latest_news": "Error",
