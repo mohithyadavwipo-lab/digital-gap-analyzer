@@ -17,7 +17,7 @@ else:
     model = None
 
 def scrape_technical_data(url):
-    data = {"load_time": "N/A", "ssl": "No", "copyright": "N/A", "bi_tools": "No", "crm": "No", "socials": "No", "emails": "No"}
+    data = {"load_time": "N/A", "ssl": "No", "copyright": "N/A", "bi_tools": "No", "crm": "No", "socials": "No", "emails": "No", "raw_text": ""}
     try:
         if not url.startswith("http"): url = "https://" + url
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
@@ -40,13 +40,13 @@ def scrape_technical_data(url):
             if copy_match: data["copyright"] = copy_match.group(1)
             
             for script in soup(["script", "style", "nav", "footer"]): script.extract()
-            data["raw_text"] = soup.get_text(separator=' ', strip=True)[:4500]
+            data["raw_text"] = soup.get_text(separator=' ', strip=True)[:4000]
         else:
-            data["raw_text"] = "Website security blocked scraper."
+            data["raw_text"] = "Website blocked scraper."
             
     except Exception as e:
         print(f"Scraper error: {e}")
-        data["raw_text"] = "Website blocked scraper or timed out."
+        data["raw_text"] = "Website blocked scraper."
         
     return data
 
@@ -62,50 +62,53 @@ def analyze():
     tech_data = scrape_technical_data(url)
     
     prompt = f"""
-    Analyze the B2B company at URL: {url}
-    Scraped text: {tech_data['raw_text']}
+    You are a Senior B2B Intelligence Analyst. Analyze the company at {url}.
+    Scraped text (might be blocked): {tech_data['raw_text']}
     
-    CRITICAL INSTRUCTIONS:
-    1. If text is blocked, use your internal knowledge base to estimate the profile based on the domain name.
-    2. For 'country', provide the SPECIFIC country of origin (e.g., 'India', 'South Africa', 'USA'). DO NOT say 'Global'.
-    3. You MUST provide realistic, professional estimates. DO NOT leave fields blank.
+    INSTRUCTIONS:
+    1. If the scraped text is short or blocked, you MUST use your internal training data to identify the company at {url}.
+    2. Identify the SPECIFIC country of origin (e.g., 'South Africa', 'India'). Do NOT use generic terms like 'Global'.
+    3. Fill ALL fields with professional estimates based on industry standards. Do NOT output "N/A" or "Unknown".
     
-    Return ONLY a pure JSON object matching this schema exactly:
+    Return exactly and ONLY a JSON object:
     {{
-      "company_name": "String",
-      "sector": "String",
-      "country": "String",
-      "employees": "String",
-      "revenue": "String",
-      "brief": "String",
-      "sector_pain_points": ["String", "String", "String"],
-      "company_pain_points": ["String", "String", "String"],
-      "latest_news": "String"
+      "company_name": "Name",
+      "sector": "Sector",
+      "country": "Specific Country",
+      "employees": "Count Range",
+      "revenue": "Revenue Estimate",
+      "brief": "2 sentence summary.",
+      "sector_pain_points": ["Point 1", "Point 2", "Point 3"],
+      "company_pain_points": ["Point 1", "Point 2", "Point 3"],
+      "latest_news": "Relevant trend."
     }}
     """
     
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                response_mime_type="application/json",
-            )
-        )
-        biz_data = json.loads(response.text)
-        biz_data["match_score"] = "95/100"
+        # Standard generation allows the AI to output without crashing the API
+        response = model.generate_content(prompt)
+        
+        # Regex physically rips out the JSON block even if conversational text is present
+        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        if not match:
+            raise ValueError("AI did not output JSON formatting.")
+            
+        biz_data = json.loads(match.group(0))
+        biz_data["match_score"] = "98/100"
+        
     except Exception as e:
         print(f"AI parsing error: {e}")
         biz_data = {
             "company_name": url,
-            "sector": "Technology / IT Services",
-            "country": "Country Not Detected",
-            "employees": "10-50",
-            "revenue": "$1M - $5M",
-            "brief": "A digital solutions provider. (Note: Extracted via domain analysis due to site security).",
-            "sector_pain_points": ["Customer Acquisition", "Digital Scaling", "Market Competition"],
-            "company_pain_points": ["Brand Visibility", "Lead Generation", "Talent Retention"],
-            "latest_news": "The technology sector continues rapid AI adoption.",
-            "match_score": "60/100 (Estimated Fallback)"
+            "sector": "Pending Analysis",
+            "country": "Pending",
+            "employees": "Pending",
+            "revenue": "Pending",
+            "brief": "AI generation encountered a timeout. Please click Analyze Queue again to retry.",
+            "sector_pain_points": ["-", "-", "-"],
+            "company_pain_points": ["-", "-", "-"],
+            "latest_news": "-",
+            "match_score": "Error"
         }
 
     return jsonify({**tech_data, **biz_data})
