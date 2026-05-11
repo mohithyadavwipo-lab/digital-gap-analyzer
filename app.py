@@ -72,14 +72,14 @@ def analyze():
       "country": "Specific Country",
       "employees": "Count Range",
       "revenue": "Revenue Estimate",
-      "brief": "2 sentence summary.",
+      "brief": "A comprehensive 4 to 5 sentence company profile detailing their core services, target market, and unique value proposition.",
       "sector_pain_points": ["Point 1", "Point 2", "Point 3"],
       "company_pain_points": ["Point 1", "Point 2", "Point 3"],
-      "latest_news": "Relevant trend."
+      "latest_news": "A detailed paragraph (3 to 4 sentences) explaining recent company news, strategic shifts, or major macro-market context impacting their specific business."
     }}
     """
     
-    # THE FIX: Direct API call to the active 2026 model, completely bypassing the broken SDK
+    # Direct API call to the active 2026 model
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
     payload = {
