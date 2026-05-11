@@ -79,8 +79,8 @@ def analyze():
     }}
     """
     
-    # Direct API call completely bypassing the broken SDK
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    # THE FIX: Direct API call to the active 2026 model, completely bypassing the broken SDK
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
