@@ -23,7 +23,7 @@
         <h2 class="mb-4 fw-bold text-dark">BrightScope Enterprise Analyst</h2>
         
         <div class="enterprise-card mb-4">
-            <p class="text-muted small">Paste up to 50 company URLs below (one per line). The system will process them sequentially with a smart-throttle to prevent API rate limits.</p>
+            <p class="text-muted small">Paste up to 50 company URLs below (one per line). Features Auto-Cooldown to bypass free-tier rate limits.</p>
             <textarea id="urlsInput" class="form-control mb-3" rows="5" placeholder="https://brightnodes.io/"></textarea>
             <div class="d-flex justify-content-end gap-2">
                 <button id="exportBtn" class="btn-export" onclick="copyToExcel()">Copy All to Excel</button>
@@ -36,8 +36,6 @@
 
     <script>
         window.analyzedData = [];
-        
-        // Helper function to pause execution
         const sleep = ms => new Promise(r => setTimeout(r, ms));
 
         async function startAnalysis() {
@@ -50,17 +48,43 @@
                 let url = urls[i];
                 const card = document.createElement('div');
                 card.className = 'enterprise-card mb-4';
-                card.innerHTML = `<div class="text-center py-4">⏳ Processing deep search for ${url}...</div>`;
                 container.appendChild(card);
 
-                try {
-                    const res = await fetch('/api/analyze', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({url})
-                    });
-                    const data = await res.json();
+                let success = false;
+                let attempts = 0;
+                let data = null;
+
+                // The Auto-Retry Loop
+                while (!success && attempts < 3) {
+                    card.innerHTML = `<div class="text-center py-4 text-primary fw-bold">⏳ Processing deep search for ${url}... ${attempts > 0 ? '(Retry ' + attempts + ')' : ''}</div>`;
                     
+                    try {
+                        const res = await fetch('/api/analyze', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({url})
+                        });
+                        data = await res.json();
+                        
+                        // Check if the API threw a Quota Error
+                        if (data.brief && data.brief.includes('Quota exceeded')) {
+                            card.innerHTML = `<div class="text-center py-4 text-warning fw-bold">🚧 Free-Tier Speed Limit Hit! Cooling down the engine for 60 seconds before retrying...</div>`;
+                            await sleep(60000); // Wait a full minute
+                            attempts++;
+                            continue; // Loop back and try this exact URL again
+                        }
+
+                        // If no quota error, we succeeded!
+                        success = true; 
+
+                    } catch (e) {
+                        card.innerHTML = `<div class="text-danger py-4 text-center fw-bold">Failed to process ${url}</div>`;
+                        break; 
+                    }
+                }
+
+                // Inject the successful data into the UI
+                if (success && data && !data.brief.includes('Quota exceeded')) {
                     data.scraped_url = url;
                     window.analyzedData.push(data);
 
@@ -112,11 +136,11 @@
                             <div class="text-muted small">${data.latest_news}</div>
                         </div>
                     `;
-                } catch (e) { card.innerHTML = `<div class="text-danger">Failed to process ${url}</div>`; }
+                }
 
-                // The Smart Throttle: Wait 4.5 seconds before processing the next URL (prevents 429 Quota Errors)
+                // Standard baseline throttle between regular requests
                 if (i < urls.length - 1) {
-                    await sleep(4500);
+                    await sleep(4000);
                 }
             }
         }
