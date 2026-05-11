@@ -5,11 +5,17 @@ import json
 import re
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, jsonify
+import google.generativeai as genai
 
 app = Flask(__name__)
 
 # Core Configuration
 api_key = os.environ.get("GEMINI_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    model = None
 
 def scrape_technical_data(url):
     data = {"load_time": "N/A", "ssl": "No", "copyright": "N/A", "bi_tools": "No", "crm": "No", "socials": "No", "emails": "No", "raw_text": ""}
@@ -37,7 +43,7 @@ def scrape_technical_data(url):
             for script in soup(["script", "style", "nav", "footer"]): script.extract()
             data["raw_text"] = soup.get_text(separator=' ', strip=True)[:3500]
         else:
-            data["raw_text"] = f"Website blocked scraper (Status {response.status_code})."
+            data["raw_text"] = f"Website security blocked scraper (Status {response.status_code})."
             
     except Exception as e:
         print(f"Scraper error: {e}")
@@ -52,7 +58,7 @@ def index():
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
     url = request.json.get('url')
-    if not url or not api_key: return jsonify({"error": "Config missing"}), 400
+    if not url or not model: return jsonify({"error": "Config missing"}), 400
 
     tech_data = scrape_technical_data(url)
     
@@ -63,42 +69,32 @@ def analyze():
     INSTRUCTIONS:
     1. If the scraped text is short or blocked, use your internal training data to identify {url}.
     2. Identify the SPECIFIC country of origin (e.g., 'South Africa', 'India', 'USA'). Do NOT use 'Global'.
-    3. Fill ALL fields with professional estimates. Do NOT leave fields blank.
+    3. Fill ALL fields with professional estimates based on the domain and industry standards. Do NOT leave fields blank.
     
-    Output exactly and ONLY a JSON object:
+    Output exactly and ONLY a JSON object matching this schema:
     {{
-      "company_name": "Name",
-      "sector": "Sector",
-      "country": "Specific Country",
-      "employees": "Count Range",
-      "revenue": "Revenue Estimate",
-      "brief": "2 sentence summary.",
-      "sector_pain_points": ["Point 1", "Point 2", "Point 3"],
-      "company_pain_points": ["Point 1", "Point 2", "Point 3"],
-      "latest_news": "Relevant trend."
+      "company_name": "String",
+      "sector": "String",
+      "country": "String",
+      "employees": "String",
+      "revenue": "String",
+      "brief": "String",
+      "sector_pain_points": ["String", "String", "String"],
+      "company_pain_points": ["String", "String", "String"],
+      "latest_news": "String"
     }}
     """
     
-    # THE PROPER FIX: Direct REST API Call bypassing the Python SDK entirely
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"responseMimeType": "application/json"}
-    }
-    
     try:
-        res = requests.post(api_url, headers=headers, json=payload)
-        res_data = res.json()
+        # Utilizing native JSON mode from the updated SDK
+        response = model.generate_content(
+            prompt,
+            generation_config={"response_mime_type": "application/json"}
+        )
         
-        # Catch direct API server errors
-        if 'error' in res_data:
-            raise ValueError(res_data['error']['message'])
-            
-        # Parse the raw text out of the standard Google JSON structure
-        raw_text = res_data['candidates'][0]['content']['parts'][0]['text'].strip()
+        raw_text = response.text.strip()
         
-        # Unbreakable JSON clip
+        # Failsafe extraction
         start_idx = raw_text.find('{')
         end_idx = raw_text.rfind('}')
         
@@ -110,14 +106,14 @@ def analyze():
             raise ValueError("No valid JSON structure found in AI response.")
             
     except Exception as e:
-        print(f"FATAL API ERROR: {e}")
+        print(f"FATAL AI ERROR: {e}")
         biz_data = {
             "company_name": url,
             "sector": "Error Parsing Data",
             "country": "Error",
             "employees": "Error",
             "revenue": "Error",
-            "brief": f"Direct API Error: {str(e)}",
+            "brief": f"System Error: {str(e)}",
             "sector_pain_points": ["Error", "Error", "Error"],
             "company_pain_points": ["Error", "Error", "Error"],
             "latest_news": "Error",
