@@ -23,7 +23,7 @@
         <h2 class="mb-4 fw-bold text-dark">BrightScope Enterprise Analyst</h2>
         
         <div class="enterprise-card mb-4">
-            <p class="text-muted small">Paste up to 50 company URLs below (one per line). The system will process them sequentially.</p>
+            <p class="text-muted small">Paste up to 50 company URLs below (one per line). The system will process them sequentially with a smart-throttle to prevent API rate limits.</p>
             <textarea id="urlsInput" class="form-control mb-3" rows="5" placeholder="https://brightnodes.io/"></textarea>
             <div class="d-flex justify-content-end gap-2">
                 <button id="exportBtn" class="btn-export" onclick="copyToExcel()">Copy All to Excel</button>
@@ -35,18 +35,19 @@
     </div>
 
     <script>
-        // Global array to store successful analyses for Excel export
         window.analyzedData = [];
+        
+        // Helper function to pause execution
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
 
         async function startAnalysis() {
             const urls = document.getElementById('urlsInput').value.split('\n').filter(u => u.trim());
             const container = document.getElementById('resultsContainer');
             container.innerHTML = '';
-            
-            // Clear previous data when starting a new batch
             window.analyzedData = [];
 
-            for (let url of urls) {
+            for (let i = 0; i < urls.length; i++) {
+                let url = urls[i];
                 const card = document.createElement('div');
                 card.className = 'enterprise-card mb-4';
                 card.innerHTML = `<div class="text-center py-4">⏳ Processing deep search for ${url}...</div>`;
@@ -60,7 +61,6 @@
                     });
                     const data = await res.json();
                     
-                    // Attach the URL to the data and push to our global array for Excel
                     data.scraped_url = url;
                     window.analyzedData.push(data);
 
@@ -113,6 +113,11 @@
                         </div>
                     `;
                 } catch (e) { card.innerHTML = `<div class="text-danger">Failed to process ${url}</div>`; }
+
+                // The Smart Throttle: Wait 4.5 seconds before processing the next URL (prevents 429 Quota Errors)
+                if (i < urls.length - 1) {
+                    await sleep(4500);
+                }
             }
         }
 
@@ -122,7 +127,6 @@
                 return;
             }
 
-            // Create Excel headers separated by tabs
             const headers = [
                 "Company Name", "Website URL", "Match Score", "Sector", "Country", 
                 "Employees", "Revenue", "Company Profile", "Sector Pain Points", 
@@ -132,9 +136,7 @@
             
             let tsvContent = headers.join("\t") + "\n";
 
-            // Format data rows
             window.analyzedData.forEach(row => {
-                // Helpers to clean up commas/newlines so Excel doesn't break
                 const cleanStr = (str) => (str || "N/A").toString().replace(/\n/g, " ").replace(/\t/g, " ");
                 const cleanArr = (arr) => Array.isArray(arr) ? arr.join(" | ") : cleanStr(arr);
                 
@@ -147,7 +149,7 @@
                     cleanStr(row.employees),
                     cleanStr(row.revenue),
                     cleanStr(row.brief),
-                    cleanArr(row.sector_pain_points), // Joins arrays with a pipe | character
+                    cleanArr(row.sector_pain_points),
                     cleanArr(row.company_pain_points),
                     cleanStr(row.latest_news),
                     cleanStr(row.load_time),
@@ -160,19 +162,16 @@
                 tsvContent += rowData.join("\t") + "\n";
             });
 
-            // Write to Clipboard
             try {
                 await navigator.clipboard.writeText(tsvContent);
-                
-                // Visual feedback on the button
                 const btn = document.getElementById('exportBtn');
                 const originalText = btn.innerText;
                 btn.innerText = "Copied to Clipboard! ✓";
-                btn.style.backgroundColor = "#059669"; // Darker green
+                btn.style.backgroundColor = "#059669";
                 
                 setTimeout(() => {
                     btn.innerText = originalText;
-                    btn.style.backgroundColor = ""; // Revert to original
+                    btn.style.backgroundColor = ""; 
                 }, 3000);
                 
             } catch (err) {
