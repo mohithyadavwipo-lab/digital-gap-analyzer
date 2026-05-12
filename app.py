@@ -64,6 +64,10 @@ def analyze():
     1. If the scraped text is short or blocked, use your internal training data to identify {url}.
     2. Identify the SPECIFIC country of origin (e.g., 'South Africa', 'India', 'USA'). Do NOT use 'Global'.
     3. Fill ALL fields with professional estimates based on industry standards. Do NOT leave fields blank.
+    4. Calculate a realistic 'match_score'. Brightnodes sells premium Web3, Blockchain, and AI development. 
+       - Score 85-100: High revenue, sectors like supply chain, finance, logistics, or deep tech, clear need for automation/transparency.
+       - Score 60-84: Mid-market, traditional sectors needing digital transformation.
+       - Score below 60: Small businesses, local retail, or sectors with no obvious budget/need for custom Web3/AI.
     
     Output exactly and ONLY a JSON object:
     {{
@@ -72,6 +76,7 @@ def analyze():
       "country": "Specific Country",
       "employees": "Count Range",
       "revenue": "Revenue Estimate",
+      "match_score": "XX/100",
       "brief": "A comprehensive 4 to 5 sentence company profile detailing their core services, target market, and unique value proposition.",
       "sector_pain_points": ["Point 1", "Point 2", "Point 3"],
       "company_pain_points": ["Point 1", "Point 2", "Point 3"],
@@ -106,7 +111,6 @@ def analyze():
         if start_idx != -1 and end_idx != -1:
             clean_json_str = raw_text[start_idx:end_idx+1]
             biz_data = json.loads(clean_json_str)
-            biz_data["match_score"] = "98/100"
         else:
             raise ValueError("No valid JSON structure found in AI response.")
             
@@ -118,12 +122,12 @@ def analyze():
             "country": "Error",
             "employees": "Error",
             "revenue": "Error",
+            "match_score": "Error",
             "brief": f"Direct API Error: {str(e)}",
             "sector_pain_points": ["Error", "Error", "Error"],
             "company_pain_points": ["Error", "Error", "Error"],
             "latest_news": "Error",
-            "email_draft": "Error generating draft.",
-            "match_score": "Error"
+            "email_draft": "Error generating draft."
         }
 
     return jsonify({**tech_data, **biz_data})
