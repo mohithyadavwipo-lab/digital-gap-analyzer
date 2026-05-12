@@ -105,7 +105,6 @@
                 let data = null;
 
                 while (!success && attempts < 3) {
-                    // THE NEW DYNAMIC LOADING ANIMATION
                     card.innerHTML = `
                         <div class="loader-wrapper">
                             <div class="spinner-ring"></div>
@@ -122,13 +121,13 @@
                         });
                         data = await res.json();
                         
-                        if (data.brief && data.brief.includes('Quota exceeded')) {
-                            // THE NEW COOLDOWN ANIMATION
+                        // NEW FIX: Catches BOTH "Quota exceeded" AND "high demand" errors
+                        if (data.brief && (data.brief.includes('Quota exceeded') || data.brief.includes('high demand'))) {
                             card.innerHTML = `
                                 <div class="loader-wrapper">
                                     <div class="spinner-ring cooldown-ring"></div>
-                                    <div class="loading-title cooldown-title">API Speed Limit Reached</div>
-                                    <div class="loading-subtext text-warning fw-bold">Cooling engine for 60 seconds. Do not close tab...</div>
+                                    <div class="loading-title cooldown-title">API Server Busy</div>
+                                    <div class="loading-subtext text-warning fw-bold">Cooling engine for 60 seconds before retrying. Do not close tab...</div>
                                 </div>
                             `;
                             await sleep(60000); 
@@ -147,7 +146,7 @@
                     }
                 }
 
-                if (success && data && !data.brief.includes('Quota exceeded')) {
+                if (success && data && !data.brief.includes('Quota exceeded') && !data.brief.includes('high demand')) {
                     data.scraped_url = url;
                     window.analyzedData.push(data);
 
