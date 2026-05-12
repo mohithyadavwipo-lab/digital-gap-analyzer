@@ -38,6 +38,18 @@
         window.analyzedData = [];
         const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+        function copyEmailDraft(btnElement) {
+            // Traverse the DOM to find the specific email text for this card
+            const emailContainer = btnElement.closest('.mt-4').querySelector('.email-text-box');
+            const textToCopy = emailContainer.innerText;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalText = btnElement.innerText;
+                btnElement.innerText = "Copied! ✓";
+                setTimeout(() => { btnElement.innerText = originalText; }, 2000);
+            });
+        }
+
         async function startAnalysis() {
             const urls = document.getElementById('urlsInput').value.split('\n').filter(u => u.trim());
             const container = document.getElementById('resultsContainer');
@@ -54,7 +66,6 @@
                 let attempts = 0;
                 let data = null;
 
-                // The Auto-Retry Loop
                 while (!success && attempts < 3) {
                     card.innerHTML = `<div class="text-center py-4 text-primary fw-bold">⏳ Processing deep search for ${url}... ${attempts > 0 ? '(Retry ' + attempts + ')' : ''}</div>`;
                     
@@ -66,27 +77,25 @@
                         });
                         data = await res.json();
                         
-                        // Check if the API threw a Quota Error
                         if (data.brief && data.brief.includes('Quota exceeded')) {
                             card.innerHTML = `<div class="text-center py-4 text-warning fw-bold">🚧 Free-Tier Speed Limit Hit! Cooling down the engine for 60 seconds before retrying...</div>`;
-                            await sleep(60000); // Wait a full minute
+                            await sleep(60000); 
                             attempts++;
-                            continue; // Loop back and try this exact URL again
+                            continue; 
                         }
-
-                        // If no quota error, we succeeded!
                         success = true; 
-
                     } catch (e) {
                         card.innerHTML = `<div class="text-danger py-4 text-center fw-bold">Failed to process ${url}</div>`;
                         break; 
                     }
                 }
 
-                // Inject the successful data into the UI
                 if (success && data && !data.brief.includes('Quota exceeded')) {
                     data.scraped_url = url;
                     window.analyzedData.push(data);
+
+                    // Generate dynamic Outlook Mailto link
+                    const mailtoLink = `mailto:?subject=Strategic Partnership with ${encodeURIComponent(data.company_name)}&body=${encodeURIComponent(data.email_draft)}`;
 
                     card.innerHTML = `
                         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
@@ -135,10 +144,20 @@
                             <div class="data-label">Latest News / Market Context</div>
                             <div class="text-muted small">${data.latest_news}</div>
                         </div>
+
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="data-label m-0">AI Outreach Draft</div>
+                                <div class="gap-2 d-flex">
+                                    <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="copyEmailDraft(this)">Copy Draft</button>
+                                    <a href="${mailtoLink}" class="btn btn-sm text-white fw-bold" style="background-color: #2563eb;">Open in Outlook</a>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-white border rounded-3 text-muted email-text-box" style="font-size: 14px; white-space: pre-wrap;">${data.email_draft}</div>
+                        </div>
                     `;
                 }
 
-                // Standard baseline throttle between regular requests
                 if (i < urls.length - 1) {
                     await sleep(4000);
                 }
@@ -151,10 +170,11 @@
                 return;
             }
 
+            // Added Email Draft to the Excel Headers
             const headers = [
                 "Company Name", "Website URL", "Match Score", "Sector", "Country", 
                 "Employees", "Revenue", "Company Profile", "Sector Pain Points", 
-                "Company Pain Points", "Latest News", "Load Time", "SSL", 
+                "Company Pain Points", "Latest News", "Email Draft", "Load Time", "SSL", 
                 "BI Tools", "CRM", "Socials/Emails"
             ];
             
@@ -176,6 +196,7 @@
                     cleanArr(row.sector_pain_points),
                     cleanArr(row.company_pain_points),
                     cleanStr(row.latest_news),
+                    cleanStr(row.email_draft), // Added Email Draft to the rows
                     cleanStr(row.load_time),
                     cleanStr(row.ssl),
                     cleanStr(row.bi_tools),
