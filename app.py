@@ -56,7 +56,7 @@ def analyze():
 
     tech_data = scrape_technical_data(url)
     
-   prompt = f"""
+    prompt = f"""
     You are a Senior B2B Intelligence Analyst and Sales Engineer. Analyze the company at {url}.
     Scraped text: {tech_data['raw_text']}
     
