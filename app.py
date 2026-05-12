@@ -56,8 +56,8 @@ def analyze():
 
     tech_data = scrape_technical_data(url)
     
-    prompt = f"""
-    You are a Senior B2B Intelligence Analyst. Analyze the company at {url}.
+   prompt = f"""
+    You are a Senior B2B Intelligence Analyst and Sales Engineer. Analyze the company at {url}.
     Scraped text: {tech_data['raw_text']}
     
     INSTRUCTIONS:
@@ -76,7 +76,7 @@ def analyze():
       "sector_pain_points": ["Point 1", "Point 2", "Point 3"],
       "company_pain_points": ["Point 1", "Point 2", "Point 3"],
       "latest_news": "A detailed paragraph (3 to 4 sentences) explaining recent company news, strategic shifts, or major macro-market context impacting their specific business.",
-      "email_draft": "Draft a basic 3-sentence B2B cold email introducing a potential partnership, referencing their company name."
+      "email_draft": "Write a highly personalized B2B cold email following this EXACT structure and formatting, using line breaks (\\n\\n) between paragraphs:\\n\\nSubject: What if [insert specific sector pain point/dream outcome]?\\n\\nDear [Company Name] Team,\\n\\nBrightnodes is a blockchain, Web3, and AI software development company based in Bengaluru, India, partnering with [insert their specific sector] companies to [insert specific value outcome].\\n\\n[Write 1-2 sentences praising a specific recent achievement, initiative, or mission based on their profile]. \\n\\n[Write 1 sentence identifying a major operational challenge or structural friction point in their industry]. Brightnodes can build [insert tailored Web3/AI tech solution] that [insert direct business benefit without technical jargon].\\n\\n[Insert 1 real industry statistic showing ROI for this type of technology].\\n\\nWould you be open to a brief call this week to explore this further?\\n\\nWarm regards,\\nBrightnodes | brightnodes.io"
     }}
     """
     
