@@ -75,7 +75,8 @@ def analyze():
       "brief": "A comprehensive 4 to 5 sentence company profile detailing their core services, target market, and unique value proposition.",
       "sector_pain_points": ["Point 1", "Point 2", "Point 3"],
       "company_pain_points": ["Point 1", "Point 2", "Point 3"],
-      "latest_news": "A detailed paragraph (3 to 4 sentences) explaining recent company news, strategic shifts, or major macro-market context impacting their specific business."
+      "latest_news": "A detailed paragraph (3 to 4 sentences) explaining recent company news, strategic shifts, or major macro-market context impacting their specific business.",
+      "email_draft": "Draft a basic 3-sentence B2B cold email introducing a potential partnership, referencing their company name."
     }}
     """
     
@@ -121,6 +122,7 @@ def analyze():
             "sector_pain_points": ["Error", "Error", "Error"],
             "company_pain_points": ["Error", "Error", "Error"],
             "latest_news": "Error",
+            "email_draft": "Error generating draft.",
             "match_score": "Error"
         }
 
