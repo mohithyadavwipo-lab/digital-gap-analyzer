@@ -5,65 +5,75 @@
     <title>BrightScope Enterprise Analyst</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #f4f7f6; font-family: 'Inter', -apple-system, sans-serif; min-height: 100vh; }
+        /* Core Industrial Theme */
+        body { background: #f1f5f9; font-family: 'Inter', -apple-system, sans-serif; min-height: 100vh; color: #0f172a; }
         
-        /* Modern Hero Section */
-        .hero-section { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 50px 0 60px 0; border-radius: 0 0 30px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: -40px; position: relative; z-index: 1; }
-        .hero-title { font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #60a5fa, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* Ultra-Premium Hero Section */
+        .hero-section { background: linear-gradient(145deg, #020617 0%, #0f172a 100%); color: white; padding: 60px 0 70px 0; border-bottom: 2px solid #1e293b; box-shadow: 0 10px 40px rgba(2, 6, 23, 0.2); position: relative; z-index: 1; }
+        .hero-title { font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(90deg, #38bdf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.8rem; }
         
-        /* Elevated Cards */
-        .enterprise-card { background: white; border-radius: 16px; border: 1px solid rgba(226, 232, 240, 0.8); padding: 35px; box-shadow: 0 10px 40px rgba(148, 163, 184, 0.1); transition: all 0.3s ease; position: relative; z-index: 2; margin-bottom: 30px; }
-        .enterprise-card:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(148, 163, 184, 0.15); }
+        /* The Signature Glow */
+        .crafted-by { display: inline-block; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(148, 163, 184, 0.2); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; color: #64748b; }
+        .name-highlight { color: #f8fafc; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        
+        /* Precision Cards */
+        .enterprise-card { background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative; z-index: 2; margin-top: -30px; margin-bottom: 30px; }
         
         /* Typography & Badges */
-        .data-label { color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .data-value { font-size: 15px; font-weight: 600; color: #1e293b; }
-        .badge-score { background: linear-gradient(135deg, #eff6ff, #e0e7ff); color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 16px; border-radius: 50px; font-weight: 700; box-shadow: 0 2px 10px rgba(37, 99, 235, 0.1); }
+        .data-label { color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .data-value { font-size: 15px; font-weight: 600; color: #0f172a; }
+        .badge-score { background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 6px 18px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         
-        /* Inner Boxes */
-        .sector-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; height: 100%; transition: border-color 0.2s; }
-        .sector-box:hover { border-color: #cbd5e1; }
-        .tech-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; }
+        /* Inner Industrial Boxes */
+        .sector-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; height: 100%; transition: border-color 0.2s; }
+        .sector-box:hover { border-color: #94a3b8; }
+        .tech-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; border-left: 4px solid #3b82f6; }
         
-        /* Polished Buttons */
-        .btn-analyze { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 12px 28px; font-weight: 600; border-radius: 8px; border: none; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2); transition: all 0.2s; }
-        .btn-analyze:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3); color: white; }
-        .btn-export { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 28px; font-weight: 600; border-radius: 8px; border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); transition: all 0.2s; }
-        .btn-export:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3); color: white; }
+        /* Pro-Grade Buttons */
+        .btn-analyze { background: #0f172a; color: white; padding: 12px 30px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; border: 1px solid #1e293b; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2); transition: all 0.2s; }
+        .btn-analyze:hover { background: #1e293b; transform: translateY(-1px); color: white; }
+        .btn-export { background: #ffffff; color: #0f172a; padding: 12px 30px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; border: 1px solid #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.2s; }
+        .btn-export:hover { border-color: #94a3b8; background: #f8fafc; color: #0f172a; }
         
-        /* === THE NEW LOADING ANIMATIONS === */
-        .loader-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0; }
-        .spinner-ring { width: 50px; height: 50px; border-radius: 50%; border: 3px solid rgba(37, 99, 235, 0.1); border-top-color: #2563eb; animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; margin-bottom: 20px; }
+        /* Input Field Styling */
+        .form-control { border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #334155; }
+        .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: #ffffff; }
+
+        /* Dynamic Loaders */
+        .loader-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 0; }
+        .spinner-ring { width: 45px; height: 45px; border-radius: 50%; border: 3px solid #e2e8f0; border-top-color: #3b82f6; animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; margin-bottom: 25px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-title { font-size: 1.2rem; font-weight: 700; background: linear-gradient(90deg, #2563eb, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .loading-subtext { color: #64748b; font-size: 0.9rem; font-weight: 500; margin-top: 8px; }
+        .loading-title { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .loading-subtext { color: #64748b; font-size: 0.85rem; font-weight: 600; margin-top: 10px; }
         
-        /* Cooldown Warning */
+        /* Cooldown States */
         .cooldown-ring { border-top-color: #f59e0b; }
-        .cooldown-title { background: linear-gradient(90deg, #d97706, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .cooldown-title { color: #d97706; }
     </style>
 </head>
 <body>
 
     <div class="hero-section">
         <div class="container text-center">
-            <h1 class="hero-title mb-3">BrightScope Enterprise Analyst</h1>
-            <p class="text-light opacity-75 fs-5 mb-0">Automated B2B Intelligence & Sales Engineering</p>
+            <h1 class="hero-title mb-2">BrightScope Enterprise Analyst</h1>
+            <p class="text-light opacity-75 fs-5 mb-0 fw-light">Automated B2B Intelligence & Sales Engineering</p>
+            <div class="crafted-by">
+                Crafted by <span class="name-highlight">Ayushi</span> & <span class="name-highlight">Mohith</span>
+            </div>
         </div>
     </div>
 
-    <div class="container py-5">
+    <div class="container pb-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <div class="enterprise-card mb-5">
+                <div class="enterprise-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="data-label m-0 text-primary">Target Queue</span>
-                        <span class="badge bg-light text-dark border">Max 50 URLs</span>
+                        <span class="data-label m-0">Target Target URL Queue</span>
                     </div>
-                    <textarea id="urlsInput" class="form-control mb-4 bg-light border-0 p-3" rows="5" placeholder="https://brightnodes.io/&#10;https://infosys.com/" style="border-radius: 10px; font-family: monospace;"></textarea>
+                    <textarea id="urlsInput" class="form-control mb-4 p-3" rows="5" placeholder="https://brightnodes.io/&#10;https://infosys.com/"></textarea>
                     <div class="d-flex justify-content-end gap-3">
-                        <button id="exportBtn" class="btn-export" onclick="copyToExcel()">Export TSV</button>
+                        <button id="exportBtn" class="btn-export" onclick="copyToExcel()">Copy the Output</button>
                         <button class="btn-analyze" onclick="startAnalysis()">Engage Deep Search</button>
                     </div>
                 </div>
@@ -83,7 +93,7 @@
             
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const originalText = btnElement.innerText;
-                btnElement.innerText = "Copied! ✓";
+                btnElement.innerText = "COPIED ✓";
                 setTimeout(() => { btnElement.innerText = originalText; }, 2000);
             });
         }
@@ -97,7 +107,7 @@
             for (let i = 0; i < urls.length; i++) {
                 let url = urls[i];
                 const card = document.createElement('div');
-                card.className = 'enterprise-card';
+                card.className = 'enterprise-card mt-0';
                 container.appendChild(card);
 
                 let success = false;
@@ -121,7 +131,6 @@
                         });
                         data = await res.json();
                         
-                        // NEW FIX: Catches BOTH "Quota exceeded" AND "high demand" errors
                         if (data.brief && (data.brief.includes('Quota exceeded') || data.brief.includes('high demand'))) {
                             card.innerHTML = `
                                 <div class="loader-wrapper">
@@ -155,22 +164,22 @@
                     card.innerHTML = `
                         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-4">
                             <div>
-                                <h3 class="fw-bold m-0" style="color: #0f172a;">${data.company_name}</h3>
-                                <a href="${url}" target="_blank" class="text-primary text-decoration-none small">${url}</a>
+                                <h3 class="fw-bold m-0" style="color: #0f172a; letter-spacing: -0.5px;">${data.company_name}</h3>
+                                <a href="${url}" target="_blank" class="text-primary text-decoration-none small fw-semibold">${url}</a>
                             </div>
-                            <span class="badge-score">Match Score: ${data.match_score}</span>
+                            <span class="badge-score">MATCH SCORE: ${data.match_score}</span>
                         </div>
                         
                         <div class="mb-5">
                             <div class="data-label">Technical Infrastructure</div>
                             <div class="tech-box">
                                 <div class="row g-3 text-muted small">
-                                    <div class="col-md-4"><strong>Load Velocity:</strong> <span class="text-dark">${data.load_time || 'N/A'}</span></div>
-                                    <div class="col-md-4"><strong>SSL Encryption:</strong> <span class="text-dark">${data.ssl || 'N/A'}</span></div>
-                                    <div class="col-md-4"><strong>Copyright:</strong> <span class="text-dark">${data.copyright || 'N/A'}</span></div>
-                                    <div class="col-md-4"><strong>BI Analytics:</strong> <span class="text-dark">${data.bi_tools || 'No'}</span></div>
-                                    <div class="col-md-4"><strong>CRM Ecosystem:</strong> <span class="text-dark">${data.crm || 'No'}</span></div>
-                                    <div class="col-md-4"><strong>Outbound Vectors:</strong> <span class="text-dark">${data.socials === 'Yes' || data.emails === 'Yes' ? 'Detected' : 'No'}</span></div>
+                                    <div class="col-md-4"><strong>Load Velocity:</strong> <span class="text-dark fw-bold">${data.load_time || 'N/A'}</span></div>
+                                    <div class="col-md-4"><strong>SSL Encryption:</strong> <span class="text-dark fw-bold">${data.ssl || 'N/A'}</span></div>
+                                    <div class="col-md-4"><strong>Copyright:</strong> <span class="text-dark fw-bold">${data.copyright || 'N/A'}</span></div>
+                                    <div class="col-md-4"><strong>BI Analytics:</strong> <span class="text-dark fw-bold">${data.bi_tools || 'No'}</span></div>
+                                    <div class="col-md-4"><strong>CRM Ecosystem:</strong> <span class="text-dark fw-bold">${data.crm || 'No'}</span></div>
+                                    <div class="col-md-4"><strong>Outbound Vectors:</strong> <span class="text-dark fw-bold">${data.socials === 'Yes' || data.emails === 'Yes' ? 'Detected' : 'No'}</span></div>
                                 </div>
                             </div>
                         </div>
@@ -184,17 +193,17 @@
 
                         <div class="mb-5">
                             <div class="data-label">Corporate Intelligence Profile</div>
-                            <div class="p-4 border rounded-3 text-dark" style="background: #f8fafc; font-size: 15px; line-height: 1.7;">${data.brief}</div>
+                            <div class="p-4 border rounded-3 text-dark" style="background: #ffffff; font-size: 15px; line-height: 1.7; border-left: 4px solid #10b981;">${data.brief}</div>
                         </div>
 
                         <div class="row g-4 mb-4">
                             <div class="col-md-6">
                                 <div class="data-label">Macro Sector Vulnerabilities</div>
-                                <div class="sector-box"><ul class="m-0 ps-3">${data.sector_pain_points.map(p => `<li class="text-muted small mb-2" style="line-height: 1.5;">${p}</li>`).join('')}</ul></div>
+                                <div class="sector-box"><ul class="m-0 ps-3">${data.sector_pain_points.map(p => `<li class="text-muted small mb-2" style="line-height: 1.6;">${p}</li>`).join('')}</ul></div>
                             </div>
                             <div class="col-md-6">
                                 <div class="data-label">Specific Organizational Pain Points</div>
-                                <div class="sector-box"><ul class="m-0 ps-3">${data.company_pain_points.map(p => `<li class="text-muted small mb-2" style="line-height: 1.5;">${p}</li>`).join('')}</ul></div>
+                                <div class="sector-box"><ul class="m-0 ps-3">${data.company_pain_points.map(p => `<li class="text-muted small mb-2" style="line-height: 1.6;">${p}</li>`).join('')}</ul></div>
                             </div>
                         </div>
 
@@ -207,11 +216,11 @@
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="data-label m-0">SOP-Compliant Outreach Protocol</div>
                                 <div class="gap-2 d-flex">
-                                    <button class="btn btn-sm btn-light border fw-bold text-dark px-3" onclick="copyEmailDraft(this)">Copy Text</button>
-                                    <a href="${mailtoLink}" class="btn btn-sm text-white fw-bold px-3" style="background: #2563eb; box-shadow: 0 2px 10px rgba(37,99,235,0.2);">Open Client</a>
+                                    <button class="btn btn-sm btn-light border fw-bold text-dark px-3" onclick="copyEmailDraft(this)" style="font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">Copy Text</button>
+                                    <a href="${mailtoLink}" class="btn btn-sm text-white fw-bold px-3" style="background: #0f172a; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">Open Client</a>
                                 </div>
                             </div>
-                            <div class="p-4 bg-white border rounded-3 text-dark email-text-box shadow-sm" style="font-size: 14.5px; line-height: 1.7; white-space: pre-wrap; font-family: 'Segoe UI', system-ui, sans-serif;">${data.email_draft}</div>
+                            <div class="p-4 bg-white border rounded-3 text-dark email-text-box" style="font-size: 14.5px; line-height: 1.8; white-space: pre-wrap; font-family: 'Segoe UI', system-ui, sans-serif; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">${data.email_draft}</div>
                         </div>
                     `;
                 }
@@ -268,12 +277,16 @@
                 await navigator.clipboard.writeText(tsvContent);
                 const btn = document.getElementById('exportBtn');
                 const originalText = btn.innerText;
-                btn.innerText = "Copied to Clipboard! ✓";
-                btn.style.background = "linear-gradient(135deg, #059669, #047857)";
+                btn.innerText = "COPIED ✓";
+                btn.style.background = "#10b981";
+                btn.style.color = "white";
+                btn.style.borderColor = "#10b981";
                 
                 setTimeout(() => {
                     btn.innerText = originalText;
                     btn.style.background = ""; 
+                    btn.style.color = "";
+                    btn.style.borderColor = "";
                 }, 3000);
                 
             } catch (err) {
