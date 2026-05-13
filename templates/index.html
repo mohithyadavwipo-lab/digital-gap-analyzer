@@ -5,51 +5,72 @@
     <title>BrightScope Enterprise Analyst</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Core Industrial Theme */
-        body { background: #f1f5f9; font-family: 'Inter', -apple-system, sans-serif; min-height: 100vh; color: #0f172a; }
+        /* Core Industrial Theme with Analyst Grid Background */
+        body { 
+            background-color: #f8fafc; 
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 25px 25px;
+            font-family: 'Inter', -apple-system, sans-serif; 
+            min-height: 100vh; 
+            color: #0f172a; 
+        }
         
         /* Ultra-Premium Hero Section */
-        .hero-section { background: linear-gradient(145deg, #020617 0%, #0f172a 100%); color: white; padding: 60px 0 70px 0; border-bottom: 2px solid #1e293b; box-shadow: 0 10px 40px rgba(2, 6, 23, 0.2); position: relative; z-index: 1; }
+        .hero-section { background: linear-gradient(145deg, #020617 0%, #0f172a 100%); color: white; padding: 60px 0 70px 0; border-bottom: 2px solid #1e293b; box-shadow: 0 10px 40px rgba(2, 6, 23, 0.4); position: relative; z-index: 1; }
         .hero-title { font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(90deg, #38bdf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.8rem; }
         
         /* The Signature Glow */
         .crafted-by { display: inline-block; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(148, 163, 184, 0.2); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; color: #64748b; }
-        .name-highlight { color: #f8fafc; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .name-highlight { color: #f8fafc; text-shadow: 0 0 10px rgba(255,255,255,0.3); transition: color 0.3s ease; }
+        .crafted-by:hover .name-highlight { color: #38bdf8; text-shadow: 0 0 15px rgba(56, 189, 248, 0.6); }
         
-        /* Precision Cards */
-        .enterprise-card { background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative; z-index: 2; margin-top: -30px; margin-bottom: 30px; }
+        /* Precision Cards with Hover Glow */
+        .enterprise-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; z-index: 2; margin-top: -30px; margin-bottom: 30px; animation: slideUp 0.6s ease-out forwards; }
+        .enterprise-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(56, 189, 248, 0.1); border-color: #bae6fd; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Typography & Badges */
-        .data-label { color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        /* Typography & Data Labels */
+        .data-label { color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; transition: color 0.3s; }
         .data-value { font-size: 15px; font-weight: 600; color: #0f172a; }
-        .badge-score { background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 6px 18px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         
-        /* Inner Industrial Boxes */
-        .sector-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; height: 100%; transition: border-color 0.2s; }
-        .sector-box:hover { border-color: #94a3b8; }
-        .tech-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; border-left: 4px solid #3b82f6; }
+        /* The Surprise: Dynamic Score Bar */
+        .score-container { display: flex; align-items: center; gap: 15px; background: #0f172a; padding: 8px 20px; border-radius: 8px; border: 1px solid #1e293b; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .score-text { color: #f8fafc; font-weight: 800; font-size: 0.9rem; letter-spacing: 1px; }
+        .score-track { width: 120px; height: 6px; background: #334155; border-radius: 10px; overflow: hidden; }
+        .score-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); border-radius: 10px; width: 0%; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1); box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+
+        /* Inner Industrial Boxes with Micro-Interactions */
+        .sector-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; height: 100%; transition: all 0.3s ease; }
+        .sector-box:hover { border-color: #38bdf8; box-shadow: 0 5px 15px rgba(56, 189, 248, 0.08); transform: translateY(-2px); }
+        .sector-box:hover .data-label { color: #38bdf8; }
+        
+        .tech-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; border-left: 4px solid #3b82f6; transition: all 0.3s ease; }
+        .tech-box:hover { border-color: #cbd5e1; border-left-color: #10b981; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.08); background: #ffffff; }
         
         /* Pro-Grade Buttons */
-        .btn-analyze { background: #0f172a; color: white; padding: 12px 30px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; border: 1px solid #1e293b; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2); transition: all 0.2s; }
-        .btn-analyze:hover { background: #1e293b; transform: translateY(-1px); color: white; }
-        .btn-export { background: #ffffff; color: #0f172a; padding: 12px 30px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; border: 1px solid #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.2s; }
-        .btn-export:hover { border-color: #94a3b8; background: #f8fafc; color: #0f172a; }
+        .btn-analyze { background: #0f172a; color: white; padding: 12px 30px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; border: 1px solid #1e293b; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-analyze:hover { background: #38bdf8; border-color: #38bdf8; color: #020617; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3); }
+        .btn-export { background: #ffffff; color: #0f172a; padding: 12px 30px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; border: 1px solid #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-export:hover { border-color: #10b981; background: #10b981; color: white; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2); }
         
         /* Input Field Styling */
-        .form-control { border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #334155; }
-        .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: #ffffff; }
+        .form-control { border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #334155; transition: all 0.3s; }
+        .form-control:focus { border-color: #38bdf8; box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15); background: #ffffff; }
 
-        /* Dynamic Loaders */
-        .loader-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 0; }
-        .spinner-ring { width: 45px; height: 45px; border-radius: 50%; border: 3px solid #e2e8f0; border-top-color: #3b82f6; animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; margin-bottom: 25px; }
+        /* === ADVANCED TERMINAL LOADER === */
+        .loader-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
+        .scanner-container { position: relative; width: 80px; height: 80px; margin-bottom: 25px; }
+        .scanner-ring-outer { position: absolute; width: 100%; height: 100%; border: 2px dashed rgba(56, 189, 248, 0.3); border-radius: 50%; animation: spin 4s linear infinite; }
+        .scanner-ring-inner { position: absolute; top: 10px; left: 10px; width: 60px; height: 60px; border: 3px solid transparent; border-top-color: #38bdf8; border-bottom-color: #10b981; border-radius: 50%; animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite reverse; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-title { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .loading-subtext { color: #64748b; font-size: 0.85rem; font-weight: 600; margin-top: 10px; }
         
+        .terminal-text { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 2px; }
+        .terminal-subtext { font-family: 'JetBrains Mono', monospace; color: #3b82f6; font-size: 0.8rem; margin-top: 8px; animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
         /* Cooldown States */
-        .cooldown-ring { border-top-color: #f59e0b; }
-        .cooldown-title { color: #d97706; }
+        .cooldown-inner { border-top-color: #f59e0b; border-bottom-color: #d97706; }
+        .cooldown-text { color: #d97706; }
     </style>
 </head>
 <body>
@@ -67,9 +88,9 @@
     <div class="container pb-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <div class="enterprise-card">
+                <div class="enterprise-card" style="margin-top: -40px;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="data-label m-0">Target Target URL Queue</span>
+                        <span class="data-label m-0" style="color: #3b82f6;">Target URL Queue</span>
                     </div>
                     <textarea id="urlsInput" class="form-control mb-4 p-3" rows="5" placeholder="https://brightnodes.io/&#10;https://infosys.com/"></textarea>
                     <div class="d-flex justify-content-end gap-3">
@@ -94,7 +115,13 @@
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const originalText = btnElement.innerText;
                 btnElement.innerText = "COPIED ✓";
-                setTimeout(() => { btnElement.innerText = originalText; }, 2000);
+                btnElement.style.background = "#10b981";
+                btnElement.style.color = "white";
+                setTimeout(() => { 
+                    btnElement.innerText = originalText; 
+                    btnElement.style.background = "";
+                    btnElement.style.color = "";
+                }, 2000);
             });
         }
 
@@ -115,11 +142,15 @@
                 let data = null;
 
                 while (!success && attempts < 3) {
+                    // THE NEW ADVANCED TERMINAL LOADER
                     card.innerHTML = `
                         <div class="loader-wrapper">
-                            <div class="spinner-ring"></div>
-                            <div class="loading-title">Extracting Intelligence... ${attempts > 0 ? '(Retry ' + attempts + ')' : ''}</div>
-                            <div class="loading-subtext">Bypassing firewalls & analyzing ${url}</div>
+                            <div class="scanner-container">
+                                <div class="scanner-ring-outer"></div>
+                                <div class="scanner-ring-inner"></div>
+                            </div>
+                            <div class="terminal-text">Synthesizing AI Profile... ${attempts > 0 ? '(Retry ' + attempts + ')' : ''}</div>
+                            <div class="terminal-subtext">> Bypassing firewalls & extracting payload from ${url} _</div>
                         </div>
                     `;
                     
@@ -134,9 +165,12 @@
                         if (data.brief && (data.brief.includes('Quota exceeded') || data.brief.includes('high demand'))) {
                             card.innerHTML = `
                                 <div class="loader-wrapper">
-                                    <div class="spinner-ring cooldown-ring"></div>
-                                    <div class="loading-title cooldown-title">API Server Busy</div>
-                                    <div class="loading-subtext text-warning fw-bold">Cooling engine for 60 seconds before retrying. Do not close tab...</div>
+                                    <div class="scanner-container">
+                                        <div class="scanner-ring-outer" style="border-color: rgba(245, 158, 11, 0.3);"></div>
+                                        <div class="scanner-ring-inner cooldown-inner"></div>
+                                    </div>
+                                    <div class="terminal-text cooldown-text">API Server Busy / Rate Limited</div>
+                                    <div class="terminal-subtext" style="color: #d97706;">> Cooling engine for 60 seconds. Do not close tab... _</div>
                                 </div>
                             `;
                             await sleep(60000); 
@@ -147,7 +181,7 @@
                     } catch (e) {
                         card.innerHTML = `
                             <div class="loader-wrapper">
-                                <div class="text-danger fw-bold fs-5 mb-2">Connection Severed</div>
+                                <div class="text-danger fw-bold fs-5 mb-2" style="font-family: 'JetBrains Mono', monospace;">> CONNECTION_SEVERED</div>
                                 <div class="text-muted small">Failed to process ${url}</div>
                             </div>
                         `;
@@ -160,14 +194,24 @@
                     window.analyzedData.push(data);
 
                     const mailtoLink = `mailto:?subject=Strategic Partnership with ${encodeURIComponent(data.company_name)}&body=${encodeURIComponent(data.email_draft)}`;
+                    
+                    // Extract numerical score for the animation bar
+                    const scoreMatch = (data.match_score || "0").match(/\d+/);
+                    const scoreVal = scoreMatch ? parseInt(scoreMatch[0]) : 0;
 
                     card.innerHTML = `
                         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-4">
                             <div>
                                 <h3 class="fw-bold m-0" style="color: #0f172a; letter-spacing: -0.5px;">${data.company_name}</h3>
-                                <a href="${url}" target="_blank" class="text-primary text-decoration-none small fw-semibold">${url}</a>
+                                <a href="${url}" target="_blank" class="text-primary text-decoration-none small fw-semibold" style="transition: color 0.2s;">${url}</a>
                             </div>
-                            <span class="badge-score">MATCH SCORE: ${data.match_score}</span>
+                            
+                            <div class="score-container">
+                                <span class="score-text">FIT: ${data.match_score}</span>
+                                <div class="score-track">
+                                    <div class="score-fill" id="fill-${i}"></div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="mb-5">
@@ -193,7 +237,7 @@
 
                         <div class="mb-5">
                             <div class="data-label">Corporate Intelligence Profile</div>
-                            <div class="p-4 border rounded-3 text-dark" style="background: #ffffff; font-size: 15px; line-height: 1.7; border-left: 4px solid #10b981;">${data.brief}</div>
+                            <div class="p-4 border rounded-3 text-dark" style="background: #ffffff; font-size: 15px; line-height: 1.7; border-left: 4px solid #10b981; transition: box-shadow 0.3s;" onmouseover="this.style.boxShadow='0 5px 15px rgba(16,185,129,0.1)'" onmouseout="this.style.boxShadow='none'">${data.brief}</div>
                         </div>
 
                         <div class="row g-4 mb-4">
@@ -214,15 +258,21 @@
 
                         <div class="mt-5 pt-4 border-top">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="data-label m-0">SOP-Compliant Outreach Protocol</div>
+                                <div class="data-label m-0" style="color: #3b82f6;">SOP-Compliant Outreach Protocol</div>
                                 <div class="gap-2 d-flex">
-                                    <button class="btn btn-sm btn-light border fw-bold text-dark px-3" onclick="copyEmailDraft(this)" style="font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">Copy Text</button>
-                                    <a href="${mailtoLink}" class="btn btn-sm text-white fw-bold px-3" style="background: #0f172a; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">Open Client</a>
+                                    <button class="btn btn-sm btn-light border fw-bold text-dark px-3" onclick="copyEmailDraft(this)" style="font-size: 12px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s;">Copy Text</button>
+                                    <a href="${mailtoLink}" class="btn btn-sm text-white fw-bold px-3" style="background: #0f172a; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s;" onmouseover="this.style.background='#38bdf8'; this.style.color='#000'" onmouseout="this.style.background='#0f172a'; this.style.color='#fff'">Open Client</a>
                                 </div>
                             </div>
-                            <div class="p-4 bg-white border rounded-3 text-dark email-text-box" style="font-size: 14.5px; line-height: 1.8; white-space: pre-wrap; font-family: 'Segoe UI', system-ui, sans-serif; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">${data.email_draft}</div>
+                            <div class="p-4 bg-white border rounded-3 text-dark email-text-box" style="font-size: 14.5px; line-height: 1.8; white-space: pre-wrap; font-family: 'Segoe UI', system-ui, sans-serif; box-shadow: inset 0 2px 8px rgba(0,0,0,0.02); transition: box-shadow 0.3s;" onmouseover="this.style.boxShadow='inset 0 2px 8px rgba(56,189,248,0.1)'" onmouseout="this.style.boxShadow='inset 0 2px 8px rgba(0,0,0,0.02)'">${data.email_draft}</div>
                         </div>
                     `;
+
+                    // Trigger the Score Bar Animation right after the card renders
+                    setTimeout(() => {
+                        const fillElement = document.getElementById(`fill-${i}`);
+                        if (fillElement) fillElement.style.width = `${scoreVal}%`;
+                    }, 100);
                 }
 
                 if (i < urls.length - 1) {
